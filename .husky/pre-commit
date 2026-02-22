@@ -1,0 +1,2 @@
+# Ejecutamos el binario local directamente, esto evita problemas de PATH con npx
+node_modules/.bin/lint-staged

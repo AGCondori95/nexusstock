@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "pmneo.tsimporter",
+    "christian-kohler.path-intellisense",
+    "usernamehm.error-lens",
+    "eamodio.gitlens"
+  ]
+}
