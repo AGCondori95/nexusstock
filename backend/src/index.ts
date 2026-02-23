@@ -1,30 +1,74 @@
-import dotenv from 'dotenv';
+import { envConfig } from '@/config/env.config.js';
+import { createApp } from '@/server.js';
+import type { Server } from 'http';
 
-// Cargar variables de entorno ANTES de cualquier otro import
-dotenv.config();
+/**
+ * Bootstrap del servidor con Graceful Shutdown.
+ *
+ * Patrón: Graceful Shutdown — al recibir SIGTERM o SIGINT:
+ *   1. Dejar de aceptar nuevas conexiones
+ *   2. Esperar a que las conexiones activas terminen (timeout: 10s)
+ *   3. Cerrar recursos (DB, caches) — se expandirá en Paso 3
+ *   4. Salir con código 0 (éxito)
+ *
+ * Esto es crítico en producción con Docker/K8s para evitar
+ * cortar requests en vuelo durante un rolling update.
+ */
 
-const PORT = process.env['PORT'] ?? '3000';
-const NODE_ENV = process.env['NODE_ENV'] ?? 'development';
+function setupGracefulShutdown(server: Server): void {
+  const shutdown = (signal: string): void => {
+    console.log(`\n🛑 Received ${signal}. Starting gracefully shutdown...`);
 
-// Validación temprana de entorno - falla rápido si falta configuración crítica
-function validateEnv(): void {
-  const required: string[] = ['NODE_ENV', 'PORT'];
-  const missing = required.filter((key) => !process.env[key]);
+    server.close((err?: Error) => {
+      if (err) {
+        console.error('❌ Error during server close:', err);
+        process.exit(1);
+      }
+      console.log('✅ HTTP server closed successfully.');
+      process.exit(1);
+    });
 
-  if (missing.length > 0) {
-    console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
-    // No usamos variables faltantes - solo informamos cuáles faltan
-  }
+    // Forzar cierre después de 10 segundos si no termina solo
+    setTimeout(() => {
+      console.error('⏰ Graceful shutdown timed out. Forcing exit.');
+      process.exit(1);
+    }, 10_000);
+  };
+
+  process.on('SIGTERM', () => {
+    shutdown('SIGTERM');
+  });
+  process.on('SIGINT', () => {
+    shutdown('SIGINT');
+  });
+
+  // Capturar promesas rechazadas no manejadas - evitar chashes silenciosos
+  process.on('unhandledRejection', (reason: unknown) => {
+    console.error('💥 UNCAUGHT PROMISE REJECTION:', reason);
+    shutdown('unhandledRejection');
+  });
+
+  process.on('uncaughtException', (error: Error) => {
+    console.error('💥 UNCAUGHT EXCEPTION:', error);
+    shutdown('uncaughtException');
+  });
 }
-
-validateEnv();
 
 function bootstrap(): void {
   console.log('🚀 NexusStock Backend starting...');
-  console.log(`📦 Environment: ${NODE_ENV}`);
-  console.log(`🔌 Port: ${PORT}`);
-  console.log('✅ TypeScript Strict Mode: ACTIVE');
-  console.log('⏳ Express server will be configured in Step 2...');
+  console.log(`📦 Environment : ${envConfig.NODE_ENV}`);
+  console.log(`🔌 Port        : ${String(envConfig.PORT)}`);
+
+  const app = createApp();
+
+  const server = app.listen(envConfig.PORT, () => {
+    console.log(`\n✅ Server running at http://localhost:${String(envConfig.PORT)}`);
+    console.log(`📡 Health check : http://localhost:${String(envConfig.PORT)}/api/v1/health`);
+    console.log(`🛡️  Security     : Helmet + CORS active`);
+    console.log(`📋 Logger       : Morgan (${envConfig.NODE_ENV} mode)\n`);
+  });
+
+  setupGracefulShutdown(server);
 }
 
 try {
