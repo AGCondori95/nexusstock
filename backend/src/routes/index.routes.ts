@@ -1,5 +1,6 @@
 import { type Request, type Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import authRouter from './auth.routes.js';
 
 const router = Router();
 
@@ -31,9 +32,11 @@ router.get('/', (_req: Request, res: Response): void => {
     data: {
       name: 'NexusStock API',
       version: 'v1',
-      docs: '/api/v1/health',
     },
   });
 });
+
+// Montar sub-routers
+router.use('/auth', authRouter);
 
 export default router;

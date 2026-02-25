@@ -3,6 +3,8 @@ import { corsMiddleware, helmetMiddleware } from '@/middlewares/security.middlew
 import express, { type Express } from 'express';
 import indexRouter from './routes/index.routes.js';
 import { globalErrorHandler, notFoundHandler } from '@/middlewares/error.middleware.js';
+import cookieParser from 'cookie-parser';
+import { envConfig } from '@/config/env.config.js';
 
 /**
  * Factory function para crear la Express App.
@@ -34,6 +36,7 @@ export function createApp(): Express {
   // ── 3. BODY PARSING ───────────────────────────────────────────────────────
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(cookieParser(envConfig.COOKIE_SECRET));
 
   // ── 4. ROUTES ─────────────────────────────────────────────────────────────
   app.use('/api/v1', indexRouter);

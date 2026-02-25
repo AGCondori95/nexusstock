@@ -11,6 +11,14 @@ interface EnvConfig {
   readonly NODE_ENV: 'development' | 'production' | 'test';
   readonly PORT: number;
   readonly ALLOWED_ORIGINS: string[];
+  // ── Database ──────────────────────────────────────────────────────────────
+  readonly MONGODB_URI: string;
+  // ── JWT ───────────────────────────────────────────────────────────────────
+  readonly JWT_ACCESS_SECRET: string;
+  readonly JWT_REFRESH_SECRET: string;
+  readonly JWT_ACCESS_EXPIRES_IN: string;
+  readonly JWT_REFRESH_EXPIRES_IN: string;
+  readonly COOKIE_SECRET: string;
 }
 
 function getEnvVar(key: string): string {
@@ -40,11 +48,21 @@ function parsePort(value: string): number {
   return port;
 }
 
+function validateSecret(key: string, value: string, minLength = 32): string {
+  if (value.length < minLength) {
+    throw new Error(
+      `❌ "${key}" must be at least ${String(minLength)} characters long for security. ` +
+        `Current length: ${String(value.length)}`,
+    );
+  }
+  return value;
+}
+
 function parseAllowedOrigins(value: string): string[] {
   return value
     .split(',')
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0);
 }
 
 // Ejecutar validación y exportar config inmutable
@@ -53,6 +71,12 @@ function loadEnvConfig(): EnvConfig {
     NODE_ENV: parseNodeEnv(getEnvVar('NODE_ENV')),
     PORT: parsePort(getEnvVar('PORT')),
     ALLOWED_ORIGINS: parseAllowedOrigins(process.env['ALLOWED_ORIGINS'] ?? 'http://localhost:5173'),
+    MONGODB_URI: getEnvVar('MONGODB_URI'),
+    JWT_ACCESS_SECRET: validateSecret('JWT_ACCESS_SECRET', getEnvVar('JWT_ACCESS_SECRET')),
+    JWT_REFRESH_SECRET: validateSecret('JWT_REFRESH_SECRET', getEnvVar('JWT_REFRESH_SECRET')),
+    JWT_ACCESS_EXPIRES_IN: process.env['JWT_ACCESS_EXPIRES_IN'] ?? '15m',
+    JWT_REFRESH_EXPIRES_IN: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',
+    COOKIE_SECRET: validateSecret('COOKIE_SECRET', getEnvVar('COOKIE_SECRET')),
   };
 }
 

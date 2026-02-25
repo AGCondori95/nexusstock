@@ -1,3 +1,4 @@
+import { connectDatabase } from '@/config/database.js';
 import { envConfig } from '@/config/env.config.js';
 import { createApp } from '@/server.js';
 import type { Server } from 'http';
@@ -54,26 +55,26 @@ function setupGracefulShutdown(server: Server): void {
   });
 }
 
-function bootstrap(): void {
+async function bootstrap(): Promise<void> {
   console.log('🚀 NexusStock Backend starting...');
-  console.log(`📦 Environment : ${envConfig.NODE_ENV}`);
-  console.log(`🔌 Port        : ${String(envConfig.PORT)}`);
 
+  // 1. Conectar a MongoDB ANTES de aceptar requests
+  await connectDatabase();
+
+  // 2. Crear y levantar servidor Express
   const app = createApp();
 
   const server = app.listen(envConfig.PORT, () => {
-    console.log(`\n✅ Server running at http://localhost:${String(envConfig.PORT)}`);
-    console.log(`📡 Health check : http://localhost:${String(envConfig.PORT)}/api/v1/health`);
-    console.log(`🛡️  Security     : Helmet + CORS active`);
-    console.log(`📋 Logger       : Morgan (${envConfig.NODE_ENV} mode)\n`);
+    console.log(`\n✅ Server running   → http://localhost:${String(envConfig.PORT)}`);
+    console.log(`📡 Health check     → http://localhost:${String(envConfig.PORT)}/api/v1/health`);
+    console.log(`🔐 Auth endpoints   → http://localhost:${String(envConfig.PORT)}/api/v1/auth`);
+    console.log(`🌍 Environment      → ${envConfig.NODE_ENV}\n`);
   });
 
   setupGracefulShutdown(server);
 }
 
-try {
-  bootstrap();
-} catch (error: unknown) {
-  console.error('💥 Fatal error during bootstrap:', error);
+bootstrap().catch((error: unknown) => {
+  console.error('💥 Fatal bootstrap error:', error);
   process.exit(1);
-}
+});
