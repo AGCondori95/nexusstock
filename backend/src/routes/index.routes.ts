@@ -1,6 +1,7 @@
 import { type Request, type Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import authRouter from './auth.routes.js';
+import inventoryRouter from './inventory.routes.js';
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.get('/', (_req: Request, res: Response): void => {
 
 // Montar sub-routers
 router.use('/auth', authRouter);
+router.use('/products', inventoryRouter);
 
 export default router;
