@@ -101,9 +101,26 @@ export const inventoryService = {
   },
 
   async deleteProduct(productId: string, deletedBy: string): Promise<void> {
-    const product = await productRepository.softDelete(productId, deletedBy);
+    const product = await productRepository.findById(productId);
     if (!product) {
-      throw new NotFoundError(`Product with ID "${productId}"`);
+      throw new NotFoundError(`Product with ID "${productId}" not found`);
+    }
+
+    // Soft delete primero - garantiza consistencia en DB
+    const discontinued = await productRepository.softDelete(productId, deletedBy);
+    if (!discontinued) {
+      throw new NotFoundError(`Product with ID "${productId}" not found`);
+    }
+
+    // Limpiar imagen en Cloudinary (best-effort - no blanquea si falla)
+    if (product.imageUrl) {
+      const { cloudinaryService } = await import('./cloudinary.service.js');
+      void cloudinaryService.delete(product.imageUrl).catch((err: unknown) => {
+        console.warn(
+          `⚠️ Failed to delete Cloudinary asset for discontinued product "${productId}":`,
+          err instanceof Error ? err.message : err,
+        );
+      });
     }
   },
 

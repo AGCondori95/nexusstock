@@ -1,5 +1,7 @@
 import { inventoryController } from '@/controllers/inventory.controller.js';
+import { mediaController } from '@/controllers/media.controller.js';
 import { authenticate, authorize } from '@/middlewares/authenticate.middleware.js';
+import { requireFile, uploadImageMiddleware } from '@/middlewares/upload.middleware.js';
 import { NextFunction, Request, RequestHandler, Response, Router } from 'express';
 
 /**
@@ -49,6 +51,22 @@ router.post(
   '/:id/stock',
   authorize('manager', 'admin'),
   h(inventoryController.adjustStock.bind(inventoryController)),
+);
+
+// ── Media: imagen de producto ─────────────────────────────────────────────────
+// Cadena de middlewares: autenticado → rol → parse multipart → validar file → handler
+router.post(
+  '/:id/image',
+  authorize('manager', 'admin'),
+  uploadImageMiddleware,
+  requireFile,
+  h(mediaController.uploadProductImage.bind(mediaController)),
+);
+
+router.delete(
+  '/:id/image',
+  authorize('manager', 'admin'),
+  h(mediaController.deleteProductImage.bind(mediaController)),
 );
 
 // ── Operaciones destructivas (solo admin) ─────────────────────────────────────

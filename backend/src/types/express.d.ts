@@ -8,6 +8,7 @@ import type { AccessTokenPayload } from '@/types/jwt.types.ts';
 
 declare global {
   namespace Express {
+    // Extender Request con campos custom
     interface Request {
       requestId?: string; // ID único por request (para trazabilidad)
       startTime?: [number, number]; // Para medir duración con process.hrtime()

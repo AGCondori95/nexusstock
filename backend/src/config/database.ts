@@ -15,7 +15,7 @@ import mongoose from 'mongoose';
 export async function connectDatabase(): Promise<void> {
   // Register listeners de eventos ANTES de conectar
   mongoose.connection.on('connected', () => {
-    console.log(`✅ MongoDB connection error: ${mongoose.connection.host}`);
+    console.log(`✅ MongoDB connected successfully: ${mongoose.connection.host}`);
   });
 
   mongoose.connection.on('error', (error: Error) => {

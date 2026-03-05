@@ -19,6 +19,11 @@ interface EnvConfig {
   readonly JWT_ACCESS_EXPIRES_IN: string;
   readonly JWT_REFRESH_EXPIRES_IN: string;
   readonly COOKIE_SECRET: string;
+  // ── Cloudinary ────────────────────────────────────────────────────────────
+  readonly CLOUDINARY_CLOUD_NAME: string;
+  readonly CLOUDINARY_API_KEY: string;
+  readonly CLOUDINARY_API_SECRET: string;
+  readonly CLOUDINARY_UPLOAD_FOLDER: string;
 }
 
 function getEnvVar(key: string): string {
@@ -77,6 +82,10 @@ function loadEnvConfig(): EnvConfig {
     JWT_ACCESS_EXPIRES_IN: process.env['JWT_ACCESS_EXPIRES_IN'] ?? '15m',
     JWT_REFRESH_EXPIRES_IN: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',
     COOKIE_SECRET: validateSecret('COOKIE_SECRET', getEnvVar('COOKIE_SECRET')),
+    CLOUDINARY_CLOUD_NAME: getEnvVar('CLOUDINARY_CLOUD_NAME'),
+    CLOUDINARY_API_KEY: getEnvVar('CLOUDINARY_API_KEY'),
+    CLOUDINARY_API_SECRET: getEnvVar('CLOUDINARY_API_SECRET'),
+    CLOUDINARY_UPLOAD_FOLDER: process.env['CLOUDINARY_UPLOAD_FOLDER'] ?? 'nexusstock/products',
   };
 }
 

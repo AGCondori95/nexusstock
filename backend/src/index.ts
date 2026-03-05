@@ -1,4 +1,5 @@
-import { connectDatabase } from '@/config/database.js';
+import { initCloudinary } from '@/config/cloudinary.config.js';
+import { connectDatabase, disconnectDatabase } from '@/config/database.js';
 import { envConfig } from '@/config/env.config.js';
 import { createApp } from '@/server.js';
 import type { Server } from 'http';
@@ -25,8 +26,16 @@ function setupGracefulShutdown(server: Server): void {
         console.error('❌ Error during server close:', err);
         process.exit(1);
       }
-      console.log('✅ HTTP server closed successfully.');
-      process.exit(1);
+
+      disconnectDatabase()
+        .then(() => {
+          console.log('✅ Graceful shutdown complete.');
+          process.exit(0);
+        })
+        .catch((error: unknown) => {
+          console.error('❌ Error during database disconnect:', error);
+          process.exit(1);
+        });
     });
 
     // Forzar cierre después de 10 segundos si no termina solo
@@ -61,13 +70,17 @@ async function bootstrap(): Promise<void> {
   // 1. Conectar a MongoDB ANTES de aceptar requests
   await connectDatabase();
 
-  // 2. Crear y levantar servidor Express
+  // 2. Inicializar Cloudinary SDK (valida credenciales en arranque)
+  initCloudinary();
+
+  // 3. Crear y levantar servidor Express
   const app = createApp();
 
   const server = app.listen(envConfig.PORT, () => {
     console.log(`\n✅ Server running   → http://localhost:${String(envConfig.PORT)}`);
     console.log(`📡 Health check     → http://localhost:${String(envConfig.PORT)}/api/v1/health`);
     console.log(`🔐 Auth endpoints   → http://localhost:${String(envConfig.PORT)}/api/v1/auth`);
+    console.log(`☁️  Cloudinary       → cloud "${envConfig.CLOUDINARY_CLOUD_NAME}"`);
     console.log(`🌍 Environment      → ${envConfig.NODE_ENV}\n`);
   });
 
