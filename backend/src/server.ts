@@ -1,29 +1,33 @@
 import { createApp } from './app';
-
-const PORT = Number(process.env['PORT'] ?? 3001);
+import { config } from '@config/env';
+import { logger } from '@utils/logger';
 
 const bootstrap = (): void => {
+  // La validación de config ocurre al importar — fail-fast garantizado
   const app = createApp();
 
-  const server = app.listen(PORT, () => {
-    console.info(`
-╔══════════════════════════════════════════╗
-║     🚀 NexusStock API — RUNNING          ║
-╠══════════════════════════════════════════╣
-║  Environment : ${(process.env['NODE_ENV'] ?? 'development').padEnd(25)}║
-║  Port        : ${String(PORT).padEnd(25)}║
-║  Health      : http://localhost:${String(PORT)}/health  ║
-╚══════════════════════════════════════════╝
-    `);
+  const server = app.listen(config.port, () => {
+    logger.info('NexusStock API started', {
+      environment: config.nodeEnv,
+      port: config.port,
+      apiPrefix: config.apiPrefix,
+      health: `http://localhost:${config.port}/health`,
+    });
   });
 
-  // ── Graceful Shutdown ────────────────────────────────────────────────────
+  // ── Graceful Shutdown ─────────────────────────────────────────────────────
   const shutdown = (signal: string): void => {
-    console.info(`\n[Server] ${signal} received — shutting down gracefully...`);
+    logger.warn(`${signal} received — shutting down gracefully...`);
     server.close(() => {
-      console.info('[Server] HTTP server closed.');
+      logger.info('HTTP server closed.');
       process.exit(0);
     });
+
+    // Forzar cierre si tarda más de 10s
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout.');
+      process.exit(1);
+    }, 10_000);
   };
 
   process.on('SIGTERM', () => {
@@ -31,6 +35,18 @@ const bootstrap = (): void => {
   });
   process.on('SIGINT', () => {
     shutdown('SIGINT');
+  });
+
+  process.on('unhandledRejection', (reason: unknown) => {
+    logger.error('Unhandled Promise Rejection', {
+      reason: reason instanceof Error ? reason.message : String(reason),
+    });
+    shutdown('unhandledRejection');
+  });
+
+  process.on('uncaughtException', (err: Error) => {
+    logger.error('Uncaught Exception', { message: err.message, stack: err.stack });
+    shutdown('uncaughtException');
   });
 };
 

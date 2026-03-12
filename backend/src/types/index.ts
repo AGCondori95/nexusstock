@@ -39,7 +39,7 @@ export interface AppConfig {
   port: number;
   nodeEnv: NodeEnv;
   apiPrefix: string;
-  corsOrigin: string[];
+  corsOrigins: string[];
 }
 
 // ─── Auth Types ──────────────────────────────────────────────────────────────
@@ -63,3 +63,24 @@ export type DeepRequired<T> = {
 
 /** Extrae el tipo resuelto de una Promesa */
 export type Awaited<T> = T extends Promise<infer U> ? U : T;
+
+// ─── Error Types ─────────────────────────────────────────────────────────────
+
+export type HttpStatusCode = 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503;
+
+export interface AppErrorOptions {
+  message: string;
+  statusCode: HttpStatusCode;
+  code: string;
+  isOperational?: boolean;
+  errors?: ValidationError[];
+}
+
+/**
+ * Express Request extendido con campos de NexusStock.
+ * Permite tipar req.user y req.requestId en todos los handlers.
+ */
+export interface NexusRequest {
+  requestId: string;
+  user?: JwtPayload;
+}
