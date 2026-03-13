@@ -136,3 +136,82 @@ export interface AuthResponseData {
   user: UserSafeDTO;
   accessToken: string;
 }
+
+// ─── Product Types ────────────────────────────────────────────────────────────
+
+export type ProductCategory = 'electronics' | 'clothing' | 'food' | 'furniture' | 'tools' | 'other';
+
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+
+export interface IProduct {
+  name: string;
+  slug: string;
+  description: string;
+  sku: string;
+  category: ProductCategory;
+  price: number;
+  costPrice: number;
+  stock: number;
+  minStockLevel: number;
+  images: string[];
+  isActive: boolean;
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IProductMethods {
+  getStockStatus(): StockStatus;
+  toDTO(): ProductDTO;
+}
+
+export type ProductDocument = Document<Types.ObjectId> & IProduct & IProductMethods;
+
+export interface ProductDTO {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  sku: string;
+  category: ProductCategory;
+  price: number;
+  costPrice: number;
+  stock: number;
+  minStockLevel: number;
+  stockStatus: StockStatus;
+  images: string[];
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─── Product Query Types ──────────────────────────────────────────────────────
+
+export interface ProductFilters {
+  category?: ProductCategory | undefined;
+  minPrice?: number | undefined;
+  maxPrice?: number | undefined;
+  inStock?: boolean | undefined;
+  search?: string | undefined;
+  isActive?: boolean | undefined;
+}
+
+export interface ProductQueryParams extends ProductFilters {
+  page?: number | undefined;
+  limit?: number | undefined;
+  sortBy?: string | undefined;
+  sortOrder?: 'asc' | 'desc' | undefined;
+}
+
+export interface StockAdjustment {
+  productId: string;
+  quantity: number;
+  operation: 'increment' | 'decrement' | 'set';
+  reason?: string;
+}
+
+export interface PaginatedProducts {
+  products: ProductDTO[];
+  meta: PaginationMeta;
+}
