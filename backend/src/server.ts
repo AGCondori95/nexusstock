@@ -1,8 +1,12 @@
 import { createApp } from './app';
 import { config } from '@config/env';
 import { logger } from '@utils/logger';
+import { database } from './config/database';
 
-const bootstrap = (): void => {
+const bootstrap = async (): Promise<void> => {
+  // Conectar a MongoDB antes de levantar el servidor
+  await database.connect();
+
   // La validación de config ocurre al importar — fail-fast garantizado
   const app = createApp();
 
@@ -50,4 +54,4 @@ const bootstrap = (): void => {
   });
 };
 
-bootstrap();
+void bootstrap();

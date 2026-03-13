@@ -1,3 +1,5 @@
+import type { Document, Types } from 'mongoose';
+
 // ─── HTTP & API Types ────────────────────────────────────────────────────────
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -83,4 +85,54 @@ export interface AppErrorOptions {
 export interface NexusRequest {
   requestId: string;
   user?: JwtPayload;
+}
+
+// ─── User & Auth Document Types ──────────────────────────────────────────────
+
+export interface IUser {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  isActive: boolean;
+  lastLoginAt?: Date | undefined;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IUserMethods {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  toSafeObject(): UserSafeDTO;
+}
+
+export type UserDocument = Document<Types.ObjectId> & IUser & IUserMethods;
+
+/** DTO segure — nunca expone el campo password */
+export interface UserSafeDTO {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  isActive: boolean;
+  lastLoginAt?: Date | undefined;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─── Auth Request/Response Types ─────────────────────────────────────────────
+
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponseData {
+  user: UserSafeDTO;
+  accessToken: string;
 }
