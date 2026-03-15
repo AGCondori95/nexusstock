@@ -29,16 +29,27 @@ const parseNumber = (key: string, defaultValue: number): number => {
   return parsed;
 };
 
-// ── Construcción y validación del config ─────────────────────────────────────
+// ── Tipos del config completo ─────────────────────────────────────────────────
+interface CloudinaryConfig {
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+  folder: string;
+}
 
-const buildConfig = (): AppConfig & {
+type FullConfig = AppConfig & {
   mongoUri: string;
   jwtSecret: string;
   jwtExpiresIn: string;
   jwtCookieExpiresIn: number;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
-} => {
+  cloudinary: CloudinaryConfig;
+};
+
+// ── Construcción y validación del config ─────────────────────────────────────
+
+const buildConfig = (): FullConfig => {
   const nodeEnv = getEnvOrDefault('NODE_ENV', 'development') as NodeEnv;
 
   const validEnvs: NodeEnv[] = ['development', 'production', 'test'];
@@ -64,6 +75,14 @@ const buildConfig = (): AppConfig & {
     // Rate limiting
     rateLimitWindowMs: parseNumber('RATE_LIMIT_WINDOW_MS', 900000),
     rateLimitMaxRequests: parseNumber('RATE_LIMIT_MAX_REQUEST', 100),
+
+    // Cloudinary
+    cloudinary: {
+      cloudName: requireEnv('CLOUDINARY_CLOUD_NAME'),
+      apiKey: requireEnv('CLOUDINARY_API_KEY'),
+      apiSecret: requireEnv('CLOUDINARY_API_SECRET'),
+      folder: getEnvOrDefault('CLOUDINARY_FOLDER', 'nexusstock'),
+    },
   };
 };
 

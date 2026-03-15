@@ -215,3 +215,35 @@ export interface PaginatedProducts {
   products: ProductDTO[];
   meta: PaginationMeta;
 }
+
+// ─── Media Types ──────────────────────────────────────────────────────────────
+
+export interface UploadedFile {
+  fieldName: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
+
+export interface CloudinaryUploadResult {
+  publicId: string;
+  url: string;
+  secureUrl: string;
+  width: number;
+  height: number;
+  format: string;
+  bytes: number;
+}
+
+export interface MediaUploadReponse {
+  images: CloudinaryUploadResult[];
+}
+
+export type ImageOperation = 'add' | 'remove';
+
+export interface ProductImageUpdate {
+  operation: ImageOperation;
+  imageUrl?: string | undefined;
+  publicIf?: string | undefined;
+}

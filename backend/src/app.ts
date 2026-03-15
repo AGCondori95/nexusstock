@@ -15,6 +15,7 @@ import { errorHandlerMiddleware } from './middlewares/errorHandler.middleware';
 import cookieParser from 'cookie-parser';
 import authRoutes from '@routes/auth.routes';
 import productRoutes from '@routes/product.routes';
+import mediaRoutes from '@routes/media.routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -85,6 +86,7 @@ export const createApp = (): Application => {
   // ── 9. Rutas API (se agregan en pasos siguientes) ─────────────────────────
   app.use(config.apiPrefix, authRoutes);
   app.use(`${config.apiPrefix}/products`, productRoutes);
+  app.use(`${config.apiPrefix}/media`, mediaRoutes);
 
   // ── 10. Handlers de cierre (orden importa: 404 → Error) ──────────────────
   app.use(notFoundMiddleware);
